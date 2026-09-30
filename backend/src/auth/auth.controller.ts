@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { SignupSchema } from './signup.schema';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { RequireAdmin } from './roles.guard';
+import { RequireAdmin, RolesGuard } from './roles.guard';
 import { Public } from './decorators/public.decorator';
 import type { SessionPayload } from './session.types';
 import {
@@ -167,9 +167,11 @@ export class AuthController {
   }
 
   /**
-   * Create an invite token a teammate can use to sign up.
+   * Create an invite token a teammate can use to sign up. ADMIN only
+   * (auth model: admin_only).
    */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @RequireAdmin()
   @Post('invite')
   @HttpCode(HttpStatus.CREATED)
   async invite(@Req() req: Request) {

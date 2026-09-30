@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -36,11 +37,12 @@ export interface LoginArgs {
 }
 
 /**
- * Auth flows: signup (first user → ADMIN, otherwise USER), login, logout.
+ * Auth flows: signup (bootstrap first user or invite redemption → ADMIN;
+ * uninvited signups after bootstrap → 403), login, logout.
  *
  * Password hashing uses bcryptjs (cost 10, OWASP-acceptable baseline). The choice
  * to count *all* users (not just admins) when deciding the bootstrap admin
- * role matches the auth_model 'full_auth' contract documented in the plan.
+ * role matches the auth_model 'admin_only' contract documented in the plan.
  */
 @Injectable()
 export class AuthService {
@@ -163,7 +165,8 @@ export class AuthService {
     if (!isBootstrap) {
       const rawToken = args.registrationToken?.trim().toLowerCase();
       if (!rawToken) {
-        throw new BadRequestException('registration token is required');
+        // admin_only: public self-signup is closed once the bootstrap admin exists.
+        throw new ForbiddenException('signup is closed; an admin invite is required');
       }
       const regToken = await this.prisma.runAsAdmin((tx) =>
         tx.registrationToken.findUnique({ where: { token: rawToken } }),
@@ -181,7 +184,9 @@ export class AuthService {
       grantedModelIds = claimed.grantedModelIds;
     }
 
-    const role = isBootstrap ? 'ADMIN' : 'USER';
+    // admin_only: the spec defines no other roles, so bootstrap and invited
+    // accounts are both ADMIN.
+    const role = 'ADMIN';
     const passwordHash = await bcrypt.hash(args.password, 10);
 
     let user: User;

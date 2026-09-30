@@ -12,7 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RequireAdmin } from '../auth/roles.guard';
+import { RequireAdmin, RolesGuard } from '../auth/roles.guard';
 import { Audit } from '../common/audit.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppConfigService } from '../config/config.service';
@@ -32,7 +32,7 @@ import { AuditLogService } from '../common/audit-log.service';
  * keys (which require a redeploy to change).
  */
 @ApiTags('admin-settings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @RequireAdmin()
 @Controller('api/admin/settings')
 export class AdminSettingsController {

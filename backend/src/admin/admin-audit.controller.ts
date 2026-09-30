@@ -7,7 +7,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { AuditActor, Prisma } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RequireAdmin } from '../auth/roles.guard';
+import { RequireAdmin, RolesGuard } from '../auth/roles.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -16,7 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
  * GET /api/admin/audit-log — queryable "who did what" trail.
  */
 @ApiTags('admin-audit')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @RequireAdmin()
 @Controller('api/admin')
 export class AdminAuditController {
